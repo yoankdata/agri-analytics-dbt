@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: fact_agri_production
+    description: >
+      Table de faits centrale.
+      Production agricole annuelle par pays.
+    columns:
+      - name: country_code
+        description: Code pays ISO3.
+        tests:
+          - not_null
+      - name: year
+        description: Année calendaire.
+        tests:
+          - not_null
+      - name: agri_production_value
+        description: Volume de production agricole (unité FAO).
+
+    tests:
+      - unique_combination:
+          arguments:
+            combination_of_columns:
+              - country_code
+              - year
+
+  - name: metric_asti_rd_exp
+    description: >
+      Dépenses totales de R&D agricole par pays et par année (ASTI).
+    columns:
+      - name: country_code
+        description: Code pays ISO3.
+      - name: year
+        description: Année calendaire.
+      - name: agri_rd_exp_total
+        description: Dépenses R&D.
+
+  - name: metric_agri_employment
+    description: >
+      Métrique pour le pourcentage d'emploi agricole.
+    columns:
+      - name: country_code
+        description: Code pays ISO3.
+      - name: year
+        description: Année calendaire.
+      - name: agri_employment_pct
+        description: Pourcentage d'emploi.
+
+  - name: mart_agri_country_year
+    description: >
+      Mart analytique final.
+      Vue dénormalisée par pays et par année combinant :
+      production agricole, emploi agricole et dépenses de R&D.
+    columns:
+      - name: country_code
+        description: Code pays ISO3.
+      - name: year
+        description: Année calendaire.
+      - name: agri_production_value
+        description: Volume de production.
+      - name: agri_employment_pct
+        description: Pourcentage d'emploi.
+      - name: agri_rd_exp_total
+        description: Dépenses de R&D.

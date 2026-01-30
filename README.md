@@ -36,3 +36,10 @@ dbt test
 dbt docs generate
 dbt docs serve
 ```
+
+## Résumé (FR)
+Ce projet implémente un pipeline de données complet (ELT) avec dbt et BigQuery pour analyser l'agriculture mondiale.
+Il croise trois sources majeures (FAO, Banque Mondiale, IFPRI) pour étudier la production, l'emploi et la R&D agricole par pays et par année.
+L'architecture suit un modèle en couches (Staging → Gold/Mart) assurant qualité et traçabilité de la donnée.
+Le modèle final `mart_agri_country_year` sert de table unique pour la visualisation et l'analyse.
+Le projet inclut documentation, tests automatisés et gestion de dépendances via dbt.

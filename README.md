@@ -1,45 +1,109 @@
-# Agri Analytics (BigQuery + dbt)
+# Agri Analytics Pipeline
+End-to-end data engineering pipeline for agricultural indicators (production, employment, R&D).
 
-## Objective
-Build a reproducible analytics pipeline (raw → staging → gold → mart) to analyze:
-- Agricultural production (FAO)
-- Agricultural employment share (World Bank)
-- Agricultural R&D expenditure (IFPRI/ASTI)
+## Project Overview
+
+This project implements an end-to-end data engineering pipeline focused on agricultural analytics.
+It integrates multiple public international data sources to produce country-year level metrics
+used for analysis and decision-making.
+
+The goal is to demonstrate:
+- multi-source data ingestion
+- analytical data modeling (star schema)
+- data quality enforcement
+- pipeline orchestration and scheduling
+
+## Data Sources
+
+- World Bank (Data360): Agricultural employment (% of total employment)
+- FAO: Agricultural production volumes
+- IFPRI / ASTI: Agricultural R&D expenditures
+
+All sources are public and loaded into BigQuery as raw datasets.
+
+## Architecture
+
+Raw Data (BigQuery)
+→ Staging Models (dbt)
+→ Dimensions & Facts
+→ Analytical Mart
+→ Orchestration & Scheduling (Prefect)
+
+![Architecture dbt DAG](docs/dbt_dag.png)
+
+
+## Data Model
+
+Star schema at country-year grain:
+
+- Dimensions:
+  - dim_country
+  - dim_year
+
+- Facts / Metrics:
+  - agricultural production
+  - agricultural employment (%)
+  - agricultural R&D expenditure
+
+Final mart:
+- mart_agri_country_year
+
+![BigQuery Mart Results](docs/bigquery_mart.png)
+
+
+## Data Quality
+
+Implemented with dbt tests:
+- not_null constraints
+- unique combination of keys (country_code, year)
+- value range checks (employment percentage)
+
+Tests are executed automatically within the pipeline.
+
+## Orchestration
+
+The pipeline is orchestrated using Prefect.
+
+Steps:
+1. dbt seed
+2. dbt run
+3. dbt test
+
+Scheduling:
+- Weekly execution (Monday 06:00 – Europe/Paris)
+
+The pipeline is observable via the Prefect UI (runs, logs, retries).
+
+![Prefect Dashboard](docs/prefect_dashboard.png)
+![Prefect Flow Run](docs/prefect_flow_run.png)
+
 
 ## Tech Stack
-- BigQuery (EU)
-- dbt-core + dbt-bigquery
-- Seeds for small reference dimensions
 
-## Data Model (Star Schema)
-**Dimensions**
-- `dim_country` (seed)
-- `dim_year`
-
-**Facts / Metrics**
-- `fact_agri_production` (FAO production)
-- `metric_agri_employment` (World Bank employment %)
-- `metric_asti_rd_exp` (ASTI R&D expenditure)
-
-**Mart**
-- `mart_agri_country_year` (country-year grain, enriched metrics)
-
-## Key Grain
-All Gold tables are at `(country_code, year)`.
+- BigQuery (Data Warehouse)
+- dbt (Transformations & tests)
+- Prefect (Orchestration & scheduling)
+- Python
 
 ## Run Locally
+
+Requirements:
+- Python
+- dbt
+- Prefect
+- Google Cloud credentials
+
+Run Prefect server:
 ```bash
-dbt debug
-dbt seed
-dbt run
-dbt test
-dbt docs generate
-dbt docs serve
+prefect server start
 ```
 
-## Résumé (FR)
-Ce projet implémente un pipeline de données complet (ELT) avec dbt et BigQuery pour analyser l'agriculture mondiale.
-Il croise trois sources majeures (FAO, Banque Mondiale, IFPRI) pour étudier la production, l'emploi et la R&D agricole par pays et par année.
-L'architecture suit un modèle en couches (Staging → Gold/Mart) assurant qualité et traçabilité de la donnée.
-Le modèle final `mart_agri_country_year` sert de table unique pour la visualisation et l'analyse.
-Le projet inclut documentation, tests automatisés et gestion de dépendances via dbt.
+Start worker:
+```bash
+prefect worker start --pool local-process
+```
+
+Trigger pipeline:
+```bash
+python orchestration/flow_agri_pipeline.py
+```
